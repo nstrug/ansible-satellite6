@@ -16,6 +16,7 @@ Copy satellite-inventory.py and hammer.ini to /etc/ansible and ensure that satel
 Put your satellite credentials in the hammer.ini file.
 
 You should then be able to run ansible against hostgroups e.g.:
-ansible <my_hostgroup> -i /etc/ansible/satellite-inventory.py -m setup
+
+    ansible <my_hostgroup> -i /etc/ansible/satellite-inventory.py -m setup
 
 
