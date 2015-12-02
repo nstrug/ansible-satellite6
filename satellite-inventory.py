@@ -91,10 +91,10 @@ class SatelliteInventory(object):
         #print self.org['results'][0]['name']
         #sys.exit()
         if self.org['results'] == []:
-            print "Organisation %s does not exist" % self._org_name
+ #           print "Organisation %s does not exist" % self._org_name
             sys.exit(1)
-        else:
-            print "Organisation %s exists" % self.org['results'][0]['name']
+ #        else:
+ #           print "Organisation %s exists" % self.org['results'][0]['name']
         #   sys.exit()
         # Cache
         if self.args.refresh_cache:
@@ -120,7 +120,7 @@ class SatelliteInventory(object):
         
     def get_json(self, url):
         r = requests.get(url, auth=(self._username, self._password), verify=self.ssl_verify)
-        print r.headers
+  #      print r.headers
         return r.json()
 
 
@@ -173,18 +173,18 @@ class SatelliteInventory(object):
         #data = self.conn.get_systems()
         
         # get hostgroups
-        print self.sat_api + "hostgroups"
+#        print self.sat_api + "hostgroups"
         self.hostgroups = self.get_json(self.sat_api + "hostgroups")
         self.systems = self.get_json(self.sat_api + "hosts")
         # print foo
-        for hostgroup in self.hostgroups['results']:
-            print hostgroup['name']
+ #       for hostgroup in self.hostgroups['results']:
+#          print hostgroup['name']
             
             
             
         for system in self.systems['results']:
-            print system['name']
-            print system['hostgroup_name']
+#            print system['name']
+#            print system['hostgroup_name']
             if system['hostgroup_name'] not in self.inventory:
                 self.inventory[system['hostgroup_name']] = []
             self.inventory[system['hostgroup_name']].append(system['name'])
