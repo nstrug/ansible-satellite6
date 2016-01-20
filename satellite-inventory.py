@@ -81,11 +81,10 @@ class SatelliteInventory(object):
         # Read settings and parse CLI arguments
         self.read_settings()
         self.parse_cli_args()
-        
-        self.post_headers = {'content-type': 'application/json'}
-        self.ssl_verify = False
 
-        
+        self.post_headers = {'content-type': 'application/json'}
+        self.ssl_verify = True
+
         self.org = self.get_json(self.sat_api + "organizations?search=" + self._org_name)
         #self.org = self.get_json(self.sat_api + "organizations?search=" + "Foo")
         #print self.org['results'][0]['name']
