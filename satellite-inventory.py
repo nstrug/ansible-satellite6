@@ -55,14 +55,12 @@ import ConfigParser
 import os
 import re
 from time import time
-import xmlrpclib
 import requests
 import sys
 import json
 
-from six import iteritems
-
 orderby_keyname = 'owners'  # alternatively 'mgmt_classes'
+
 
 class SatelliteInventory(object):
 
@@ -81,7 +79,8 @@ class SatelliteInventory(object):
         self.post_headers = {'content-type': 'application/json'}
         self.ssl_verify = False
 
-        self.org = self.get_json(self.sat_api + "organizations?search=" + self._org_name)
+        self.org = self.get_json(self.sat_api + "organizations?search="
+                                 + self._org_name)
         if self.org['results'] == []:
             sys.exit(1)
 
@@ -104,12 +103,12 @@ class SatelliteInventory(object):
         print(data_to_print)
 
     def get_json(self, url):
-        r = requests.get(url, auth=(self._username, self._password), verify=self.ssl_verify)
+        r = requests.get(url, auth=(self._username, self._password),
+                         verify=self.ssl_verify)
         return r.json()
 
-
     def is_cache_valid(self):
-        """ Determines if the cache files have expired, or if it is still valid """
+        """ Determines if cache files have expired or if it is still valid """
 
         if os.path.isfile(self.cache_path_cache):
             mod_time = os.path.getmtime(self.cache_path_cache)
@@ -124,7 +123,8 @@ class SatelliteInventory(object):
         """ Reads the settings from the hammer.ini file """
 
         config = ConfigParser.SafeConfigParser()
-        config.read(os.path.dirname(os.path.realpath(__file__)) + '/hammer.ini')
+        config.read(os.path.dirname(os.path.realpath(__file__))
+                    + '/hammer.ini')
 
         self._host = config.get('hammer', 'host')
         self.sat_api = "%s/api/v2/" % self._host
@@ -163,7 +163,6 @@ class SatelliteInventory(object):
         self.write_to_cache(self.cache, self.cache_path_cache)
         self.write_to_cache(self.inventory, self.cache_path_inventory)
 
-
     def get_host_info(self):
         """ Get variables about a specific host """
 
@@ -171,18 +170,19 @@ class SatelliteInventory(object):
             # Need to load index from cache
             self.load_cache_from_cache()
 
-        if not self.args.host in self.cache:
+        if self.args.host not in self.cache:
             # try updating the cache
             self.update_cache()
 
-            if not self.args.host in self.cache:
+            if self.args.host not in self.cache:
                 # host might not exist anymore
                 return self.json_format_dict({}, True)
 
         return self.json_format_dict(self.cache[self.args.host], True)
 
     def push(self, my_dict, key, element):
-        """ Pushed an element onto an array that may not have been defined in the dict """
+        """ Pushed an element onto an array that may not have been defined in
+            the dict """
 
         if key in my_dict:
             my_dict[key].append(element)
@@ -211,12 +211,14 @@ class SatelliteInventory(object):
         cache.close()
 
     def to_safe(self, word):
-        """ Converts 'bad' characters in a string to underscores so they can be used as Ansible groups """
+        """ Converts 'bad' characters in a string to underscores so they can be
+            used as Ansible groups """
 
         return re.sub("[^A-Za-z0-9\-]", "_", word)
 
     def json_format_dict(self, data, pretty=False):
-        """ Converts a dict to a JSON object and dumps it as a formatted string """
+        """ Converts a dict to a JSON object and dumps it as a
+            formatted string """
 
         if pretty:
             return json.dumps(data, sort_keys=True, indent=2)
