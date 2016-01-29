@@ -59,8 +59,6 @@ import requests
 import sys
 import json
 
-orderby_keyname = 'owners'  # alternatively 'mgmt_classes'
-
 
 class SatelliteInventory(object):
 
