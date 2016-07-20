@@ -13,7 +13,7 @@ This, more or less, allows you to keep one central database containing
 info about all of your managed instances.
 
 This script is an example of sourcing that data from Red Hat Satellite 6.
-Each of the following satellite management entitities will correspond to a 
+Each of the following satellite management entitities will correspond to a
 group in Ansible:
 
 * Location
@@ -23,10 +23,11 @@ group in Ansible:
 
 See http://ansible.github.com/api.html for more info
 
-Tested with Satellite 6.1.4
+Tested with Satellite 6.1.6
 
 Changelog:
-    - 2015-11-02 nstrug: Initial version, based on cobbler.py 
+    - 2016-01-26 mburgerh: Cleanup
+    - 2015-11-02 nstrug: Initial version, based on cobbler.py
 
 """
 
@@ -54,18 +55,9 @@ import ConfigParser
 import os
 import re
 from time import time
-import xmlrpclib
 import requests
 import sys
 import json
-
-from six import iteritems
-
-# NOTE -- this file assumes Ansible is being accessed FROM the cobbler
-# server, so it does not attempt to login with a username and password.
-# this will be addressed in a future version of this script.
-
-orderby_keyname = 'owners'  # alternatively 'mgmt_classes'
 
 
 class SatelliteInventory(object):
@@ -86,16 +78,9 @@ class SatelliteInventory(object):
         self.ssl_verify = True
 
         self.org = self.get_json(self.sat_api + "organizations?search=" + self._org_name)
-        #self.org = self.get_json(self.sat_api + "organizations?search=" + "Foo")
-        #print self.org['results'][0]['name']
-        #sys.exit()
         if self.org['results'] == []:
- #           print "Organisation %s does not exist" % self._org_name
             sys.exit(1)
- #        else:
- #           print "Organisation %s exists" % self.org['results'][0]['name']
-        #   sys.exit()
-        # Cache
+
         if self.args.refresh_cache:
             self.update_cache()
         elif not self.is_cache_valid():
@@ -110,21 +95,17 @@ class SatelliteInventory(object):
         if self.args.host:
             data_to_print += self.get_host_info()
         else:
-        #    self.inventory['_meta'] = { 'hostvars': {} }
-        #    for hostname in self.cache:
-        #        self.inventory['_meta']['hostvars'][hostname] = {'cobbler': self.cache[hostname] }
             data_to_print += self.json_format_dict(self.inventory, True)
 
         print(data_to_print)
-        
+
     def get_json(self, url):
-        r = requests.get(url, auth=(self._username, self._password), verify=self.ssl_verify)
-  #      print r.headers
+        r = requests.get(url, auth=(self._username, self._password),
+                         verify=self.ssl_verify)
         return r.json()
 
-
     def is_cache_valid(self):
-        """ Determines if the cache files have expired, or if it is still valid """
+        """ Determines if cache files have expired or if it is still valid """
 
         if os.path.isfile(self.cache_path_cache):
             mod_time = os.path.getmtime(self.cache_path_cache)
@@ -139,7 +120,8 @@ class SatelliteInventory(object):
         """ Reads the settings from the hammer.ini file """
 
         config = ConfigParser.SafeConfigParser()
-        config.read(os.path.dirname(os.path.realpath(__file__)) + '/hammer.ini')
+        config.read(os.path.dirname(os.path.realpath(__file__))
+                    + '/hammer.ini')
 
         self._host = config.get('hammer', 'host')
         self.sat_api = "%s/api/v2/" % self._host
@@ -147,7 +129,7 @@ class SatelliteInventory(object):
         self._username = config.get('hammer', 'username')
         self._password = config.get('hammer', 'password')
         self._org_name = config.get('hammer', 'organisation')
- 
+
         # Cache related
         cache_path = config.get('hammer', 'cache_path')
         self.cache_path_cache = cache_path + "/ansible-hammer.cache"
@@ -167,83 +149,17 @@ class SatelliteInventory(object):
     def update_cache(self):
         """ Make calls to satellite and save the output in a cache """
 
-        #self._connect()
-        #self.groups = dict()
-        #data = self.conn.get_systems()
-        
-        # get hostgroups
-#        print self.sat_api + "hostgroups"
         self.hostgroups = self.get_json(self.sat_api + "hostgroups")
         self.systems = self.get_json(self.sat_api + "hosts")
-        # print foo
- #       for hostgroup in self.hostgroups['results']:
-#          print hostgroup['name']
-            
-            
-            
+
         for system in self.systems['results']:
-#            print system['name']
-#            print system['hostgroup_name']
             if system['hostgroup_name'] not in self.inventory:
                 self.inventory[system['hostgroup_name']] = []
             self.inventory[system['hostgroup_name']].append(system['name'])
-            
+
         self.write_to_cache(self.cache, self.cache_path_cache)
         self.write_to_cache(self.inventory, self.cache_path_inventory)
-      
-  
-        
-        
-        # get systems
-        #print self.sat_api + "organizations/" + str(self.org['id']) + "/systems"
-        #data = self.get_json(self.sat_api + "organizations/" + str(self.org['id']) + "/systems")
-        
-#        for host in data['results']:
-            # Get the FQDN for the host and add it to the right groups
-#            dns_name = host['name'] #None
-#            print dns_name
-#            ksmeta = None
-#            interfaces = host['environment_id']
-#            print interfaces
-#            sys.exit()
-#            # hostname is often empty for non-static IP hosts
-#            if dns_name == '':
-#                for (iname, ivalue) in iteritems(interfaces):
-#                    if ivalue['management'] or not ivalue['static']:
-#                        this_dns_name = ivalue.get('dns_name', None)
-#                        if this_dns_name is not None and this_dns_name is not "":
-#                            dns_name = this_dns_name
 
-#            if dns_name == '':
-#                continue
-
-#            status = host['status']
-#            profile = host['profile']
-#            classes = host[orderby_keyname]
-
-#            if status not in self.inventory:
-#                self.inventory[status] = []
-#            self.inventory[status].append(dns_name)
-
-#            if profile not in self.inventory:
-#                self.inventory[profile] = []
-#            self.inventory[profile].append(dns_name)
-
- #           for cls in classes:
- #               if cls not in self.inventory:
-#                    self.inventory[cls] = []
-#                self.inventory[cls].append(dns_name)
-
-            # Since we already have all of the data for the host, update the host details as well
-
-            # The old way was ksmeta only -- provide backwards compatibility
-
-#            self.cache[dns_name] = host
-#            if "ks_meta" in host:
- #               for key, value in iteritems(host["ks_meta"]):
-#                    self.cache[dns_name][key] = value
-
-  
     def get_host_info(self):
         """ Get variables about a specific host """
 
@@ -251,18 +167,19 @@ class SatelliteInventory(object):
             # Need to load index from cache
             self.load_cache_from_cache()
 
-        if not self.args.host in self.cache:
+        if self.args.host not in self.cache:
             # try updating the cache
             self.update_cache()
 
-            if not self.args.host in self.cache:
+            if self.args.host not in self.cache:
                 # host might not exist anymore
                 return self.json_format_dict({}, True)
 
         return self.json_format_dict(self.cache[self.args.host], True)
 
     def push(self, my_dict, key, element):
-        """ Pushed an element onto an array that may not have been defined in the dict """
+        """ Pushed an element onto an array that may not have been defined in
+            the dict """
 
         if key in my_dict:
             my_dict[key].append(element)
@@ -291,12 +208,14 @@ class SatelliteInventory(object):
         cache.close()
 
     def to_safe(self, word):
-        """ Converts 'bad' characters in a string to underscores so they can be used as Ansible groups """
+        """ Converts 'bad' characters in a string to underscores so they can be
+            used as Ansible groups """
 
         return re.sub("[^A-Za-z0-9\-]", "_", word)
 
     def json_format_dict(self, data, pretty=False):
-        """ Converts a dict to a JSON object and dumps it as a formatted string """
+        """ Converts a dict to a JSON object and dumps it as a
+            formatted string """
 
         if pretty:
             return json.dumps(data, sort_keys=True, indent=2)
