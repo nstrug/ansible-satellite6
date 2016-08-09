@@ -1,3 +1,6 @@
+DO NO USE - use https://github.com/theforeman/foreman_ansible_inventory instead.
+
+
 Ansible Dynamic Inventory for Red Hat Satellite 6
 =================================================
 * Author: Nick Strugnell
